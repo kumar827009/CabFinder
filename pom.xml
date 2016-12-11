@@ -34,32 +34,6 @@
             <version>3.0.2</version>
         </dependency>
 
-        <!--     <dependency>
-                 <groupId>com.typesafe.akka</groupId>
-                 <artifactId>akka-http-experimental_2.11</artifactId>
-                 <version>2.4.11</version>
-             </dependency>
-             <dependency>
-                 <groupId>com.typesafe.akka</groupId>
-                 <artifactId>akka-http-spray-json-experimental_2.11</artifactId>
-                 <version>2.4.10</version>
-             </dependency>
-             <dependency>
-                 <groupId>com.typesafe.akka</groupId>
-                 <artifactId>akka-http-testkit_2.11</artifactId>
-                 <version>10.0.0</version>
-             </dependency>
-             <dependency>
-                 <groupId>org.scalatest</groupId>
-                 <artifactId>scalatest_2.10</artifactId>
-                 <version>2.2.6</version>
-                 <scope>test</scope>
-             </dependency>
-             <dependency>
-                 <groupId>com.typesafe.akka</groupId>
-                 <artifactId>akka-slf4j_2.11</artifactId>
-                 <version>2.4.14</version>
-             </dependency>-->
         <!-- Akka HTTP Dependencies starts here -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
@@ -225,7 +199,7 @@
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
-       <!-- <testSourceDirectory>src/test/scala</testSourceDirectory>-->
+        <!-- <testSourceDirectory>src/test/scala</testSourceDirectory>-->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -260,6 +234,7 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
+
             </plugin>
 
             <plugin>
@@ -289,6 +264,34 @@
                 </configuration>
             </plugin>
             <!-- JOB Server Ends -->
+<!--            <plugin>
+                &lt;!&ndash; Build an executable JAR &ndash;&gt;
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.go.service.GoHttpServer</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>-->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.go.service.GoHttpServer</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
         </plugins>
 
 

@@ -12,5 +12,6 @@ trait ResourceRouter {
   implicit def executionContext: ExecutionContext
 
   implicit val system = ActorSystem()
+  println(system.settings)
   implicit val materializer = ActorMaterializer()
 }
