@@ -3,6 +3,7 @@ package com.go.service
 import java.sql.{DriverManager, PreparedStatement, ResultSet}
 
 import akka.Done
+import com.go.entity.model.DataAccessLayer
 import com.go.entity.{Driver, Drivers, Taxi}
 import slick.driver.MySQLDriver.api._
 
@@ -16,7 +17,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
  */
 class LocationService(implicit val executionContext: ExecutionContext) {
 
-  val cabFinderQuery = "SELECT id,lat,lng, ( 6371 * acos( cos( radians(?) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(?) ) + sin( radians(?) ) * sin( radians( lat ) ) ) ) AS distance FROM markers HAVING distance < ? ORDER BY distance LIMIT 0 , ?;"
+  val cabFinderQuery = "SELECT id,lat,lng, ( 6371 * acos( cos( radians(?) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(?) ) + sin( radians(?) ) * sin( radians( lat ) ) ) ) AS distance FROM drivers HAVING distance < ? ORDER BY distance LIMIT 0 , ?"
+
   Class.forName("com.mysql.jdbc.Driver");
   val con = DriverManager.getConnection("jdbc:mysql://localhost:3306/Location", "root", "admin")
   var locations = new mutable.HashMap[Long, Taxi]()
@@ -62,7 +64,7 @@ class LocationService(implicit val executionContext: ExecutionContext) {
   /**
    * This method adds a cab location to the collection.
    * @param taxi Cab resource to add
-   * @return Future[Option[Taxi]] returns a Future on cab
+   * @return Future[Done] returns a Future on cab
    */
   def cabAggregate(taxi: Taxi): Future[Done] = Future {
     println("Driver Details:: " + taxi.chauffeurId)
@@ -75,32 +77,22 @@ class LocationService(implicit val executionContext: ExecutionContext) {
    * Slick Prepared statement could be used instead of JDBC PS. Slick PS is under construction.
    * @param lat latitude of User
    * @param lng longitude of User
-   * @param radius  distance within which Cabs to be searched in KM
-   * @return Future[Option[Cab]] returns a Future on cab
+   * @param radiuAsList  distance within which Cabs to be searched in KM
+   * @return Future[Drivers] returns a Future on cab
    */
-  def searchCabs(lat: Long, lng: Long, radius: Long, limit: Int): Future[Drivers] = Future {
-    println("Searching for Cabs Aound You !!!!:: ")
-    val con = DriverManager.getConnection("jdbc:mysql://localhost:3306/Location", "root", "admin")
-    val ps: PreparedStatement = con.prepareCall(cabFinderQuery)
-    ps.setFloat(1, lat)
-    ps.setFloat(2, lng)
-    ps.setFloat(3, lat)
-    ps.setFloat(4, radius / 1000)
-    ps.setInt(5, limit)
+  def searchCabs(lat: Float, lng: Float, radiuAsList: List[String], limit: Int): Future[Drivers] = Future {
 
-    val res: ResultSet = ps.executeQuery()
-    val lst: scala.collection.mutable.ListBuffer[Driver] = new mutable.ListBuffer[Driver]()
-    while (res.next()) {
-      val id = res.getInt(1)
-      val lat = res.getFloat(2)
-      val lng = res.getFloat(3)
-      val dist = res.getLong(4)
-      println("Driver Id :" + id + " Latitude :" + lat + "longitude: " + lng + "Distance: " + dist)
-      lst += new Driver(id, lat, lng, dist)
+    val rad = radiuAsList.toList match {
+      case Nil => println(s"No Radius Param: Defaulting to 500")
+        500
+      case radius :: Nil => println(s"Just one  Radius Param.  Just Taking that !!!!")
+        radius.toLong
+      case multipleRadius => println(s"Multiple radius in Param. Just Taking one !!!!")
+        multipleRadius(0).toLong
     }
-
-    lst.toList
-    new Drivers((lst.toList))
+    val distInKM: Float = rad.toFloat / 1000
+    println("Searching for Cabs within " + distInKM + " KM around You !!!!:: ")
+    new Drivers(DataAccessLayer.getMyDrivers(lat,lng, distInKM, limit))
   }
 
   /**
@@ -108,11 +100,13 @@ class LocationService(implicit val executionContext: ExecutionContext) {
    * @param id Cab resource to add
    * @return Future[Option[Cab]] returns a Future on cab
    */
+
   def searchCab(id: Long): Future[Option[Taxi]] = Future {
     println("Searching for Cabs:: " + id)
-    Some(locations.getOrElse[Taxi](id, {
+   /* Some(locations.getOrElse[Taxi](id, {
       new Taxi(1, 1, 1, 222)
-    }))
+    }))*/
+    Some(DataAccessLayer.getDriverById(id.toInt))
   }
 
   /**
