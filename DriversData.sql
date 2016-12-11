@@ -1,3 +1,7 @@
+create database Location;
+USE Location;
+SHOW tables;
+
 CREATE TABLE `drivers` (
   `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
   `lat` FLOAT( 10, 6 ) NOT NULL ,
