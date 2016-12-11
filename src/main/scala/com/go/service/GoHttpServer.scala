@@ -9,6 +9,7 @@ import akka.http.scaladsl.server._
 import com.go.entity.{Driver, Drivers, JsonSupport, Taxi}
 import com.go.req.Validator
 import com.go.route.ResourceRouter
+import com.typesafe.config.ConfigFactory
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
@@ -97,7 +98,6 @@ object GoHttpServer extends App with ResourceRouter with Validator {
           println("Searching for Id" + id)
           validateDriverId(id.toInt) match {
             case Some("valid") =>
-              //val searchResult: Future[Option[Taxi]] = cabAgg.searchCab(id.toInt)
               val maybeItem: Future[Option[Taxi]] = cabAgg.searchCab(id.toInt)
               onSuccess(maybeItem) {
                 case Some(taxi) => complete(taxi)
@@ -106,14 +106,6 @@ object GoHttpServer extends App with ResourceRouter with Validator {
             case Some("invalid") =>
               complete(400, "Latitude should be between +/- 90")
           }
-
-          //---------
-          /*val maybeItem: Future[Option[Taxi]] = cabAgg.searchCab(id.toLong)
-
-          onSuccess(maybeItem) {
-            case Some(taxi) => complete(taxi)
-            case None => complete(StatusCodes.NotFound)
-          }*/
         } ~
           put {
             entity[Taxi](as[Taxi]) { taxi =>
@@ -126,8 +118,8 @@ object GoHttpServer extends App with ResourceRouter with Validator {
           }
       }
   }
-
-  val bindingFuture = Http().bindAndHandle(route, "localhost", 8282)
+val config = ConfigFactory.load()
+  val bindingFuture = Http().bindAndHandle(route, config.getString("httpDetails.url"), config.getString("httpDetails.port").toInt)
 
   println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
   StdIn.readLine() // let it run until user presses return
